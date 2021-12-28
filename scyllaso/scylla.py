@@ -94,8 +94,7 @@ class Scylla:
             ssh.set_yaml_property("/etc/scylla/scylla.yaml", "authenticator", "PasswordAuthenticator")
         ssh.set_yaml_property("/etc/scylla/scylla.yaml", "cluster_name", self.cluster_name)
         ssh.set_yaml_property("/etc/scylla/scylla.yaml", "compaction_static_shares", "100")
-        ssh.set_yaml_property("/etc/scylla/scylla.yaml", "compaction_enforce_min_threshold", "100")
-        ssh.set_yaml_property("/etc/scylla/scylla.yaml", "compaction_static_shares", "true")
+        ssh.set_yaml_property("/etc/scylla/scylla.yaml", "compaction_enforce_min_threshold", "true")
 
     def install(self):
         log_important("Installing Scylla: started")

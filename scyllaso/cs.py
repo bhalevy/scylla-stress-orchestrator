@@ -131,23 +131,30 @@ class CassandraStress:
         thread.start()
         return thread
 
-    def insert(self, profile, item_count, nodes, mode="native cql3", rate="threads=100", sequence_start=None):
-        log_important(f"Inserting {item_count} items")
+    def insert(self, profile, partitions, nodes, ops=None, mode="native cql3", rate="threads=100", sequence_start=None):
+        partitions = int(partitions)
+        if not ops:
+            ops = int(partitions)
+        ops = int(ops)
+        log_important(f"Inserting {ops} operations into {partitions} partitions")
         start_seconds = time.time()
 
-        per_load_generator = item_count // len(self.load_ips)
+        keys_per_load_generator = partitions // len(self.load_ips)
+        ops_per_load_generator = ops // len(self.load_ips)
         start = sequence_start
         if sequence_start is None:
             start = 1
 
-        end = start + per_load_generator - 1
         cmd_list = []
         for i in range(0, len(self.load_ips)):
-            cmd = f'user profile={profile} "ops(insert=1)" n={per_load_generator} no-warmup -pop seq={start}..{end} -mode {mode} -rate {rate}  -node {nodes}'
+            if i < len(self.load_ips):
+                end = start + keys_per_load_generator - 1
+            else:
+                end = partitions
+            cmd = f'user profile={profile} "ops(insert=1)" n={ops_per_load_generator} no-warmup -pop seq={start}..{end} -mode {mode} -rate {rate}  -node {nodes}'
             log(self.load_ips[i] + " " + cmd)
             cmd_list.append(cmd)
             start = end + 1
-            end = end + per_load_generator
 
         futures = []
         for i in range(0, len(self.load_ips)):
@@ -161,8 +168,8 @@ class CassandraStress:
 
         duration_seconds = time.time() - start_seconds
         log(f"Duration : {duration_seconds} seconds")
-        log(f"Insertion rate: {item_count // duration_seconds} items/second")
-        log_important(f"Inserting {item_count} items: done")
+        log(f"Insertion rate: {ops // duration_seconds} ops/second")
+        log_important(f"Inserting {ops} operations into {partitions} partitions: done")
 
     def __ssh(self, ip, command):
         self.__new_ssh(ip).exec(command)

@@ -99,6 +99,40 @@ class CassandraStress:
         else:
             self.__stress(self.load_ips[load_index], 0, command)
 
+    def parallel_stress(self, command_fmt, partitions, sequence_start=None):
+        log_important(f"Running stress on {len(self.load_ips)} load_generators over {partitions} partitions")
+        start_seconds = time.time()
+
+        keys_per_load_generator = partitions // len(self.load_ips)
+        start = sequence_start
+        if sequence_start is None:
+            start = 1
+
+        cmd_list = []
+        for i in range(0, len(self.load_ips)):
+            if i < len(self.load_ips):
+                end = start + keys_per_load_generator - 1
+            else:
+                end = partitions
+            cmd = command_fmt.format(start=start, end=end)
+            log(self.load_ips[i] + " " + cmd)
+            cmd_list.append(cmd)
+            start = end + 1
+
+        futures = []
+        for i in range(0, len(self.load_ips)):
+            f = self.async_stress(cmd_list[i], load_index=i)
+            futures.append(f)
+            if i == 0:
+                time.sleep(10)
+
+        for f in futures:
+            f.join()
+
+        duration_seconds = time.time() - start_seconds
+        log(f"Duration : {duration_seconds} seconds")
+        log_important(f"Running stress on {len(self.load_ips)} load_generators over {partitions} partitions: done")
+
     def stress_seq_range(self, row_count, command_part1, command_part2):
         load_ip_count = len(self.load_ips)
         row_count_per_ip = row_count // load_ip_count

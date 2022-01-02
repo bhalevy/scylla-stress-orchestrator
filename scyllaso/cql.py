@@ -91,4 +91,4 @@ def wait_for_cql_start(node_ips, timeout=7200, connect_timeout=10, max_tries_per
         if not node_ips:
             return
 
-    raise Exception(f'Waiting for CQL to start timed out after {timeout} seconds for node(s): {node_ips}.')
+    raise TimeoutError(f'Waiting for CQL to start timed out after {timeout} seconds for node(s): {node_ips}.')

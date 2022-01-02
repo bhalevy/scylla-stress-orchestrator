@@ -78,7 +78,11 @@ class Scylla:
         # Scylla AMI automatically performs setup
         # and then starts up. Each node is a separate 1-node cluster.
         # Here, we wait for this startup.
-        wait_for_cql_start(ip)
+        try:
+            wait_for_cql_start(ip, timeout=30)
+        except TimeoutError as e:
+            log_important(f"Warning: {e}")
+            pass
 
         # Scylla started. Now we stop it and wipe
         # the data it generated.

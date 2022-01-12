@@ -123,8 +123,7 @@ class CassandraStress:
         for i in range(0, len(self.load_ips)):
             f = self.async_stress(cmd_list[i], load_index=i)
             futures.append(f)
-            if i == 0:
-                time.sleep(10)
+            time.sleep(1)
 
         for f in futures:
             f.join()
@@ -194,8 +193,7 @@ class CassandraStress:
         for i in range(0, len(self.load_ips)):
             f = self.async_stress(cmd_list[i], load_index=i)
             futures.append(f)
-            if i == 0:
-                time.sleep(10)
+            time.sleep(1)
 
         for f in futures:
             f.join()

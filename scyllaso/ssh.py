@@ -180,18 +180,25 @@ class SSH:
         sel.register(process.stderr, selectors.EVENT_READ)
 
         while True:
+            any = False
             for key, _ in sel.select():
                 data = key.fileobj.read1().decode()
                 if not data:
                     exitcode = process.poll()
                     if exitcode == 0 or ignore_errors:
                         return
+                    elif exitcode is None:
+                        continue
                     else:
                         raise Exception(f"Failed to execute [{cmd_list}], exitcode={exitcode}")
+                else:
+                    any = True
                 lines = data.splitlines()
                 log_level = LogLevel.info if key.fileobj is process.stdout else LogLevel.warning
                 for line in lines:
                     log_machine(self.ip, line, log_level)
+            if not any:
+                time.sleep(1)
 
     def async_exec(self, command):
         thread = WorkerThread(self.exec, (command))
